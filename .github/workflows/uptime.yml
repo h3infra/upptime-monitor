@@ -26,6 +26,8 @@ jobs:
     name: Check status
     runs-on: ubuntu-latest
     steps:
+      - name: Fetch full git history
+        run: git fetch --prune --unshallow || true
       - name: Checkout
         uses: actions/checkout@v4
         with:
