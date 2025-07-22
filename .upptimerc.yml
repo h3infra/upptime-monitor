@@ -24,7 +24,7 @@ sites:
     ipv6: true
 
 status-website:
-  baseUrl: /h3.upptime-monitor
+  baseUrl: /upptime-monitor
   logoUrl: https://raw.githubusercontent.com/upptime/upptime.js.org/master/static/img/icon.svg
   name: Upptime
   introTitle: "**Upptime** is the open-source uptime monitor and status page, powered entirely by GitHub."
@@ -33,4 +33,4 @@ status-website:
     - title: Status
       href: /
     - title: GitHub
-      href: https://github.com/h3infra/h3.upptime-monitor
+      href: https://github.com/h3infra/upptime-monitor
