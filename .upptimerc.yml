@@ -2,8 +2,15 @@ owner: h3infra
 repo: h3.upptime-monitor
 
 sites:
+
+  
+  - name: Google
+    url: https://www.google.com
+  - name: Wikipedia
+    url: https://en.wikipedia.org
   - name: FiberDigital
     url: https://www.fiber.com.au/
+  
   - name: Orderart
     url: https://www.orderart.com.au/
   - name: habitat3
