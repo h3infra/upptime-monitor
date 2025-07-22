@@ -4,24 +4,16 @@ repo: h3.upptime-monitor
 sites:
 
   
-  - name: Google
-    url: https://www.google.com
-  - name: Wikipedia
-    url: https://en.wikipedia.org
   - name: FiberDigital
     url: https://www.fiber.com.au/
-  
+  - name: Amrapali Indian Cuisine
+    url: https://www.amrapali.com.au/
   - name: Orderart
     url: https://www.orderart.com.au/
   - name: habitat3
     url: https://www.habitat3.com.au/
   - name: Test Broken Site
     url: https://thissitedoesnotexist.koj.co
-  - name: IPv6 test
-    url: forwardemail.net
-    port: 80
-    check: "tcp-ping"
-    ipv6: true
 
 status-website:
   baseUrl: /upptime-monitor
