@@ -4,7 +4,7 @@
     "url": "https://www.fiber.com.au/",
     "icon": "https://icons.duckduckgo.com/ip3/www.fiber.com.au.ico",
     "slug": "fiber-digital",
-    "status": "up",
+    "status": "down",
     "uptime": "100.00%",
     "uptimeDay": "100.00%",
     "uptimeWeek": "100.00%",
@@ -15,7 +15,9 @@
     "timeWeek": 3862,
     "timeMonth": 3862,
     "timeYear": 3862,
-    "dailyMinutesDown": {}
+    "dailyMinutesDown": {
+      "2025-07-22": 0
+    }
   },
   {
     "name": "Amrapali Indian Cuisine",
