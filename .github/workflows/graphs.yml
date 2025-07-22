@@ -38,4 +38,5 @@ jobs:
         uses: upptime/uptime-monitor@v1.40.1
         with:
           command: "graphs"
-          GH_PAT: ${{ secrets.GH_PAT }}
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
