@@ -36,4 +36,4 @@ jobs:
         with:
           command: "graphs"
         env:
-          token: ${{ secrets.GH_PAT }}
+           GH_PAT: ${{ secrets.GH_PAT }}
