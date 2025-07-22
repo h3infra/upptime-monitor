@@ -15,14 +15,12 @@
 
 
 name: Summary CI
-
 on:
   schedule:
     - cron: "0 0 * * *"
   repository_dispatch:
     types: [summary]
   workflow_dispatch:
-
 jobs:
   release:
     name: Generate README
@@ -33,7 +31,6 @@ jobs:
         with:
           ref: ${{ github.head_ref }}
           token: ${{ secrets.GH_PAT || github.token }}
-
       - name: Update summary in README
         uses: upptime/uptime-monitor@v1.40.1
         with:
