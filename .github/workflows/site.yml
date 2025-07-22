@@ -21,6 +21,7 @@ on:
   repository_dispatch:
     types: [static_site]
   workflow_dispatch:
+
 jobs:
   release:
     name: Build and deploy site
@@ -32,12 +33,14 @@ jobs:
         with:
           ref: ${{ github.head_ref }}
           token: ${{ secrets.GH_PAT || github.token }}
+
       - name: Generate site
         uses: upptime/uptime-monitor@v1.40.1
         with:
           command: "site"
         env:
-          GH_PAT: ${{ secrets.GH_PAT || github.token }}
+          GH_TOKEN: ${{ secrets.GH_PAT || github.token }}
+
       - uses: peaceiris/actions-gh-pages@v4
         name: GitHub Pages Deploy
         with:
