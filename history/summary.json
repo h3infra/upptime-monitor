@@ -4,19 +4,19 @@
     "url": "https://www.fiber.com.au/",
     "icon": "https://icons.duckduckgo.com/ip3/www.fiber.com.au.ico",
     "slug": "fiber-digital",
-    "status": "down",
-    "uptime": "100.00%",
-    "uptimeDay": "100.00%",
-    "uptimeWeek": "100.00%",
-    "uptimeMonth": "100.00%",
-    "uptimeYear": "100.00%",
-    "time": 3862,
-    "timeDay": 4056,
-    "timeWeek": 3862,
-    "timeMonth": 3862,
-    "timeYear": 3862,
+    "status": "up",
+    "uptime": "99.23%",
+    "uptimeDay": "99.10%",
+    "uptimeWeek": "99.23%",
+    "uptimeMonth": "99.23%",
+    "uptimeYear": "99.23%",
+    "time": 3743,
+    "timeDay": 3905,
+    "timeWeek": 3743,
+    "timeMonth": 3743,
+    "timeYear": 3743,
     "dailyMinutesDown": {
-      "2025-07-22": 0
+      "2025-07-22": 13
     }
   },
   {
