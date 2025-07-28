@@ -1,6 +1,8 @@
 owner: h3infra
 repo: upptime-monitor
 
+commitStatus: true
+
 sites:
 
   
