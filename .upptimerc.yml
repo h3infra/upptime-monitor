@@ -21,8 +21,8 @@ sites:
     url: https://www.orderart.com.au/
   - name: habitat3
     url: https://www.habitat3.com.au/
-  - name: Test Broken Site
-    url: https://thissitedoesnotexist.koj.co
+  - name: Test Fake Site
+    url: https://doesnotexist.upptime.test
 
 status-website:
   baseUrl: /upptime-monitor
