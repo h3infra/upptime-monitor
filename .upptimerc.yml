@@ -9,7 +9,8 @@ commitMessages:
   status: ":red_circle: ${{ name }} is down"
   statusUp: ":white_check_mark: ${{ name }} is back up"
 
-  
+ci:
+  schedule: "*/5 * * * *"  # Run uptime checks every 5 minutes  
 sites:
 
   
