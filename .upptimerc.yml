@@ -24,7 +24,7 @@ sites:
   - name: habitat3
     url: https://www.habitat3.com.au/
   - name: Test Fake Site
-    url: https://www.gootestgle.com
+    url: https://www.google.com
 
 status-website:
   baseUrl: /upptime-monitor
