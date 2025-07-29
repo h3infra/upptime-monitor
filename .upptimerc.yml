@@ -5,15 +5,16 @@ commitStatus: true
 
 issueTemplate: long
 
+closeIssue: true   # ✅ Auto-close downtime issues
+
 commitMessages:
   status: ":red_circle: ${{ name }} is down"
   statusUp: ":white_check_mark: ${{ name }} is back up"
 
 ci:
   schedule: "*/5 * * * *"  # Run uptime checks every 5 minutes  
-sites:
 
-  
+sites:
   - name: FiberDigital
     url: https://www.fiber.com.au/
   - name: Amrapali Indian Cuisine
