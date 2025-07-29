@@ -26,11 +26,6 @@ jobs:
     name: Deploy updates
     runs-on: ubuntu-latest
     steps:
-      - name: Close issues if site is up
-        uses: upptime/close-issues@master
-        env: 
-          GH_PAT: ${{ secrets.GH_PAT || github.token }}
-      
       - name: Checkout
         uses: actions/checkout@v4
         with:
