@@ -3,6 +3,13 @@ repo: upptime-monitor
 
 commitStatus: true
 
+issueTemplate: long
+
+commitMessages:
+  status: ":red_circle: ${{ name }} is down"
+  statusUp: ":white_check_mark: ${{ name }} is back up"
+
+  
 sites:
 
   
