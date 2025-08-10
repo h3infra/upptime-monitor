@@ -2,12 +2,22 @@ name: Auto-close incidents when site is back up
 
 on:
   schedule:
-    - cron: "*/30 * * * *"   # every 30 minutes
-  workflow_dispatch:         # allow manual "Run workflow"
+    - cron: "*/30 * * * *" # every 30 minutes
+  workflow_dispatch:
+    inputs:
+      okStatusCodes:
+        description: "Comma-separated status codes that also count as UP (in addition to 200-399)"
+        required: false
+        default: "401,403" # many sites block bots
 
+# Needed so the job can read issues and close them
 permissions:
   contents: read
-  issues: write              # needed to comment/close issues
+  issues: write
+
+concurrency:
+  group: autoclose-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   autoclose:
@@ -18,82 +28,130 @@ jobs:
         with:
           script: |
             const owner = context.repo.owner;
-            const repo = context.repo.repo;
+            const repo  = context.repo.repo;
 
-            const labelName = 'incident';    // adjust if you use a different label
-            const per_page = 100;
+            // Input parsing
+            const explicitOk = (core.getInput('okStatusCodes') || '401,403')
+              .split(',')
+              .map(s => parseInt(s.trim(), 10))
+              .filter(n => Number.isFinite(n));
 
-            // Collect all open incident issues
-            let page = 1, all = [];
-            while (true) {
-              const { data } = await github.rest.issues.listForRepo({
-                owner, repo,
-                state: 'open',
-                labels: labelName,
-                per_page, page,
-              });
-              if (!data.length) break;
-              all.push(...data);
-              if (data.length < per_page) break;
-              page++;
-            }
-            core.info(`Found ${all.length} open incident issues`);
-
-            // Extract a URL from title/body (works with Upptime's default comment format)
-            const extractUrl = (issue) => {
-              const texts = [issue.title, issue.body || ''];
-              const patterns = [
-                /\((https?:\/\/[^\s)]+)\)/i,     // e.g. "Site Name (http://...)" (Upptime default)
-                /URL:\s*(https?:\/\/\S+)/i,
-                /Endpoint:\s*(https?:\/\/\S+)/i,
-                /(https?:\/\/[^\s]+)/i,          // last resort
-              ];
-              for (const t of texts) {
-                for (const rx of patterns) {
-                  const m = t && t.match(rx);
-                  if (m) return m[1].trim().replace(/[.,;]+$/, '');
-                }
+            // Fetch all open issues, 100 per page
+            async function getOpenIssues() {
+              const all = [];
+              let page = 1;
+              while (true) {
+                const { data } = await github.rest.issues.listForRepo({
+                  owner, repo,
+                  state: 'open',
+                  per_page: 100,
+                  page
+                });
+                all.push(...data);
+                if (data.length < 100) break;
+                page++;
               }
-              return null;
-            };
+              return all;
+            }
 
-            let closed = 0, checked = 0;
+            // Extract first URL from Upptime's body text
+            function extractUrl(body) {
+              if (!body) return null;
+              // Prefer "(https://...)" pattern
+              let m = body.match(/\((https?:\/\/[^)\s]+)\)/i);
+              if (m && m[1]) return m[1];
+              // Fallback to first http(s) URL
+              m = body.match(/https?:\/\/[^\s)]+/i);
+              return m ? m[0] : null;
+            }
 
-            for (const issue of all) {
-              const url = extractUrl(issue);
+            // Simple timeout wrapper around fetch
+            async function fetchWithTimeout(url, opts = {}, ms = 15000) {
+              const ctrl = new AbortController();
+              const t = setTimeout(() => ctrl.abort(), ms);
+              try {
+                return await fetch(url, { ...opts, signal: ctrl.signal });
+              } finally {
+                clearTimeout(t);
+              }
+            }
+
+            // Determine if a status code is "up"
+            function isUp(status) {
+              return (status >= 200 && status < 400) || explicitOk.includes(status);
+            }
+
+            // Check URL with HEAD, then GET on 405/403/401 or HEAD not allowed
+            async function checkUrlUp(url) {
+              try {
+                // Try HEAD without following redirects (many sites still respond 3xx)
+                let res = await fetchWithTimeout(url, {
+                  method: 'HEAD',
+                  redirect: 'manual',
+                  headers: { 'User-Agent': 'upptime-autoclose-bot' }
+                }, 15000);
+
+                // Some servers disallow HEAD or respond 403/401 to HEAD:
+                if (res.status === 405 || res.status === 501 || res.status === 403 || res.status === 401) {
+                  res = await fetchWithTimeout(url, {
+                    method: 'GET',
+                    redirect: 'follow',
+                    headers: { 'User-Agent': 'upptime-autoclose-bot' }
+                  }, 20000);
+                }
+
+                core.info(`Checked ${url} -> ${res.status}`);
+                return isUp(res.status);
+              } catch (e) {
+                core.info(`Error checking ${url}: ${e.message}`);
+                return false;
+              }
+            }
+
+            const issues = await getOpenIssues();
+
+            // Only consider Upptime incidents ("is down" in title)
+            const incidents = issues.filter(i => /(^|\s)is down\b/i.test(i.title));
+
+            core.info(`Found ${incidents.length} open incident issue(s).`);
+
+            let closed = 0;
+            for (const issue of incidents) {
+              // Extract URL from the body
+              const url = extractUrl(issue.body);
               if (!url) {
-                core.warning(`No URL found in issue #${issue.number}: "${issue.title}"`);
+                core.info(`Issue #${issue.number} has no detectable URL; skipping`);
                 continue;
               }
 
-              core.info(`Checking #${issue.number} -> ${url}`);
-              checked++;
+              // Check if the site is back up
+              const up = await checkUrlUp(url);
 
-              let isUp = false;
-              try {
-                const controller = new AbortController();
-                const to = setTimeout(() => controller.abort(), 10000); // 10s timeout
-                const res = await fetch(url, { method: 'GET', redirect: 'follow', signal: controller.signal, headers: { 'user-agent': 'upptime-auto-close-bot' } });
-                clearTimeout(to);
-                core.info(`HTTP ${res.status} for ${url}`);
-                isUp = res.ok; // 2xx
-              } catch (err) {
-                core.info(`Fetch failed for ${url}: ${err.message}`);
-              }
-
-              if (isUp) {
+              if (up) {
                 await github.rest.issues.createComment({
-                  owner, repo, issue_number: issue.number,
-                  body: `Auto-check ✅ Endpoint is responding (HTTP 2xx). Closing incident.\n\n- URL: ${url}\n- Time: ${new Date().toISOString()}`
+                  owner, repo,
+                  issue_number: issue.number,
+                  body: `✅ Auto-close bot: Site responded as **up**. Closing this incident.\n\nURL checked: ${url}`
                 });
+
                 await github.rest.issues.update({
-                  owner, repo, issue_number: issue.number, state: 'closed'
+                  owner, repo,
+                  issue_number: issue.number,
+                  state: 'closed',
                 });
+
+                core.info(`Closed #${issue.number} (${issue.title})`);
                 closed++;
+              } else {
+                core.info(`Still down: #${issue.number} (${issue.title})`);
               }
+
+              // small spacing to be polite to rate limits
+              await new Promise(r => setTimeout(r, 400));
             }
 
             core.summary
               .addHeading('Auto-close summary')
-              .addRaw(`Checked: ${checked}\nClosed: ${closed}\nRemaining open: ${all.length - closed}\n`)
+              .addRaw(`Checked ${incidents.length} incident(s).`)
+              .addRaw(`<br/>Closed ${closed} incident(s).`)
               .write();
