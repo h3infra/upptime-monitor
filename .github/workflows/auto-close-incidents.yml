@@ -1,0 +1,99 @@
+name: Auto-close incidents when site is back up
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"   # every 30 minutes
+  workflow_dispatch:         # allow manual "Run workflow"
+
+permissions:
+  contents: read
+  issues: write              # needed to comment/close issues
+
+jobs:
+  autoclose:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check open incidents and close those back up
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+
+            const labelName = 'incident';    // adjust if you use a different label
+            const per_page = 100;
+
+            // Collect all open incident issues
+            let page = 1, all = [];
+            while (true) {
+              const { data } = await github.rest.issues.listForRepo({
+                owner, repo,
+                state: 'open',
+                labels: labelName,
+                per_page, page,
+              });
+              if (!data.length) break;
+              all.push(...data);
+              if (data.length < per_page) break;
+              page++;
+            }
+            core.info(`Found ${all.length} open incident issues`);
+
+            // Extract a URL from title/body (works with Upptime's default comment format)
+            const extractUrl = (issue) => {
+              const texts = [issue.title, issue.body || ''];
+              const patterns = [
+                /\((https?:\/\/[^\s)]+)\)/i,     // e.g. "Site Name (http://...)" (Upptime default)
+                /URL:\s*(https?:\/\/\S+)/i,
+                /Endpoint:\s*(https?:\/\/\S+)/i,
+                /(https?:\/\/[^\s]+)/i,          // last resort
+              ];
+              for (const t of texts) {
+                for (const rx of patterns) {
+                  const m = t && t.match(rx);
+                  if (m) return m[1].trim().replace(/[.,;]+$/, '');
+                }
+              }
+              return null;
+            };
+
+            let closed = 0, checked = 0;
+
+            for (const issue of all) {
+              const url = extractUrl(issue);
+              if (!url) {
+                core.warning(`No URL found in issue #${issue.number}: "${issue.title}"`);
+                continue;
+              }
+
+              core.info(`Checking #${issue.number} -> ${url}`);
+              checked++;
+
+              let isUp = false;
+              try {
+                const controller = new AbortController();
+                const to = setTimeout(() => controller.abort(), 10000); // 10s timeout
+                const res = await fetch(url, { method: 'GET', redirect: 'follow', signal: controller.signal, headers: { 'user-agent': 'upptime-auto-close-bot' } });
+                clearTimeout(to);
+                core.info(`HTTP ${res.status} for ${url}`);
+                isUp = res.ok; // 2xx
+              } catch (err) {
+                core.info(`Fetch failed for ${url}: ${err.message}`);
+              }
+
+              if (isUp) {
+                await github.rest.issues.createComment({
+                  owner, repo, issue_number: issue.number,
+                  body: `Auto-check ✅ Endpoint is responding (HTTP 2xx). Closing incident.\n\n- URL: ${url}\n- Time: ${new Date().toISOString()}`
+                });
+                await github.rest.issues.update({
+                  owner, repo, issue_number: issue.number, state: 'closed'
+                });
+                closed++;
+              }
+            }
+
+            core.summary
+              .addHeading('Auto-close summary')
+              .addRaw(`Checked: ${checked}\nClosed: ${closed}\nRemaining open: ${all.length - closed}\n`)
+              .write();
