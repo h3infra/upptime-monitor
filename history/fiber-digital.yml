@@ -1,7 +1,7 @@
 url: https://www.fiber.com.au/
-status: up
-code: 200
-responseTime: 2918
-lastUpdated: 2025-08-15T23:22:11.812Z
+status: down
+code: 415
+responseTime: 770
+lastUpdated: 2025-08-16T11:43:16.507Z
 startTime: 2025-07-21T04:53:42.367Z
 generator: Upptime <https://github.com/upptime/upptime>
