@@ -15,8 +15,6 @@ ci:
   schedule: "*/1 * * * *"  # Run uptime checks every 5 minutes  
 
 sites:
-  - name: FiberDigital
-    url: https://www.fiber.com.au/
   - name: Chemist Outlet
     url: https://www.chemistoutlet.com.au
   - name: Chemist Australia
