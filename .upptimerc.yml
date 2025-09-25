@@ -17,10 +17,14 @@ ci:
 sites:
   - name: FiberDigital
     url: https://www.fiber.com.au/
-  - name: Amrapali Indian Cuisine
-    url: https://www.amrapali.com.au/
-  - name: Orderart
-    url: https://www.orderart.com.au/
+  - name: Chemist Outlet
+    url: https://www.chemistoutlet.com.au
+  - name: Chemist Australia
+    url: https://www.chemistaustralia.com.au
+  - name: Pharmacy Direct
+    url: https://www.pharmacydirect.com.au
+  - name: Chempro
+    url: https://chempro.com.au
   - name: habitat3
     url: https://www.habitat3.com.au/
   - name: Test Fake Site
